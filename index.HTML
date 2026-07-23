@@ -1,37 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>charity: water Click Game</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Water Quest</title>
+
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="container">
-    <header class="hero">
-      <img src="img/cw_logo_horizontal.png" alt="charity: water logo" class="logo" />
-      <div>
-        <h1>Water Quest</h1>
-        <p class="game-instructions">Tap the jerry can each time it appears. Collect 20 or more cans to win!</p>
-      </div>
+  <main class="game-container">
+    <header class="game-header">
+      <p class="eyebrow">Clean Water Challenge</p>
+
+      <h1>Water Quest</h1>
+
+      <p class="instructions">
+        Collect 20 water cans before the 30-second timer reaches zero.
+        Click each water can as quickly as you can.
+      </p>
     </header>
 
-    <div class="stats">
-      <div class="stat-card">
-        <span class="label">Score</span>
-        <strong id="current-cans">0</strong>
-      </div>
-      <div class="stat-card timer-card">
-        <span class="label">Time Left</span>
-        <strong id="timer">30</strong><span class="seconds">s</span>
-      </div>
-    </div>
+    <section class="scoreboard" aria-label="Game information">
+      <div class="score-card">
+        <span class="score-label">Water Cans</span>
 
-    <div id="status-message" class="status-message">Ready to make a difference?</div>
+        <span class="score-number">
+          <span id="current-cans">0</span>
+          /
+          <span id="target-cans">20</span>
+        </span>
+      </div>
 
-    <div class="game-grid"></div>
-    <button id="start-game">Start Game</button>
-  </div>
+      <div class="score-card">
+        <span class="score-label">Time Left</span>
+
+        <span class="score-number">
+          <span id="timer">30</span>
+          seconds
+        </span>
+      </div>
+    </section>
+
+    <section class="progress-section" aria-label="Water collection progress">
+      <div class="progress-information">
+        <span>Community progress</span>
+        <span id="progress-percent">0%</span>
+      </div>
+
+      <div
+        class="progress-track"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="20"
+        aria-valuenow="0"
+        id="progress-track"
+      >
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+    </section>
+
+    <section
+      id="game-grid"
+      class="game-grid"
+      aria-label="Water Quest game board"
+    >
+      <!-- JavaScript creates the 16 game spaces here. -->
+    </section>
+
+    <p id="status-message" class="status-message" aria-live="polite">
+      Press the button when you are ready.
+    </p>
+
+    <button id="start-button" class="main-button" type="button">
+      Start Game
+    </button>
+
+    <section class="mission-section">
+      <h2>Why Clean Water Matters</h2>
+
+      <p>
+        Clean water supports healthier families, stronger communities,
+        education, and opportunity. Water Quest is inspired by the goal
+        of making safe water available to everyone.
+      </p>
+    </section>
+  </main>
+
   <script src="script.js"></script>
 </body>
 </html>
