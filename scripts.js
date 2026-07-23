@@ -1,140 +1,303 @@
-// Game settings and state
-const TARGET_SCORE = 20;
-let currentCans = 0;
-let timeLeft = 30;
-let gameActive = false;
-let spawnInterval;
-let timerInterval;
+// ------------------------------
+// Game settings
+// ------------------------------
 
+const TARGET_SCORE = 20;
+const STARTING_TIME = 30;
+const NUMBER_OF_SPACES = 16;
+const SPAWN_SPEED = 850;
+const CAN_LIFETIME = 750;
+
+// ------------------------------
+// Game state
+// ------------------------------
+
+let currentCans = 0;
+let timeLeft = STARTING_TIME;
+let gameActive = false;
+
+let spawnInterval = null;
+let timerInterval = null;
+let removeCanTimeout = null;
+
+// ------------------------------
+// Messages
+// ------------------------------
 
 const winMessages = [
- "Amazing! You're helping water projects thrive.",
- "You crushed it! That water will change lives.",
- "Winning! Your clicks brought clean water closer.",
+  "Amazing! You completed the clean-water challenge.",
+  "You did it! Clean water is one step closer.",
+  "Great work! Every action can make a difference."
 ];
-
 
 const loseMessages = [
- "Nice try — keep practicing and try again!",
- "Almost there. Can you reach 20 next time?",
- "So close! Give it another shot to win.",
+  "Nice try! Keep practicing and try again.",
+  "Almost there! Can you reach 20 next time?",
+  "Good effort! Give the challenge another shot."
 ];
 
+// ------------------------------
+// Select HTML elements
+// ------------------------------
 
-const grid = document.querySelector('.game-grid');
-const scoreDisplay = document.getElementById('current-cans');
-const timerDisplay = document.getElementById('timer');
-const statusMessage = document.getElementById('status-message');
-const startButton = document.getElementById('start-game');
+const grid = document.getElementById("game-grid");
+const scoreDisplay = document.getElementById("current-cans");
+const targetDisplay = document.getElementById("target-cans");
+const timerDisplay = document.getElementById("timer");
+const statusMessage = document.getElementById("status-message");
+const startButton = document.getElementById("start-button");
 
+const progressBar = document.getElementById("progress-bar");
+const progressPercent = document.getElementById("progress-percent");
+const progressTrack = document.getElementById("progress-track");
 
-function createGrid() {
- grid.innerHTML = '';
- for (let i = 0; i < 9; i += 1) {
-   const cell = document.createElement('div');
-   cell.className = 'grid-cell';
-   grid.appendChild(cell);
- }
+// ------------------------------
+// Create the game board
+// ------------------------------
+
+function createGameGrid() {
+  grid.innerHTML = "";
+
+  for (let i = 0; i < NUMBER_OF_SPACES; i++) {
+    const gridSpace = document.createElement("div");
+
+    gridSpace.classList.add("grid-space");
+    gridSpace.dataset.index = i;
+
+    grid.appendChild(gridSpace);
+  }
 }
 
-
-function updateScore() {
- scoreDisplay.textContent = currentCans;
-}
-
-
-function updateTimer() {
- timerDisplay.textContent = timeLeft;
-}
-
-
-function randomMessage(messages) {
- return messages[Math.floor(Math.random() * messages.length)];
-}
-
-
-function spawnWaterCan() {
- if (!gameActive) return;
- const cells = document.querySelectorAll('.grid-cell');
- cells.forEach((cell) => {
-   cell.innerHTML = '';
- });
-
-
- const randomCell = cells[Math.floor(Math.random() * cells.length)];
- randomCell.innerHTML = `
-   <div class="water-can-wrapper">
-     <div class="water-can" aria-label="jerry can"></div>
-   </div>
- `;
-}
-
+// ------------------------------
+// Start or restart the game
+// ------------------------------
 
 function startGame() {
- if (gameActive) return;
+  // Stop any older timers before starting a new game.
+  clearGameTimers();
 
+  // Reset the game values.
+  currentCans = 0;
+  timeLeft = STARTING_TIME;
+  gameActive = true;
 
- currentCans = 0;
- timeLeft = 30;
- gameActive = true;
- startButton.textContent = 'Playing...';
- startButton.disabled = true;
- statusMessage.textContent = 'Tap the jerry can as fast as you can!';
- updateScore();
- updateTimer();
- createGrid();
- spawnWaterCan();
+  // Reset the page.
+  scoreDisplay.textContent = currentCans;
+  timerDisplay.textContent = timeLeft;
 
+  statusMessage.textContent = "Go! Click the water cans!";
+  statusMessage.classList.remove("win", "lose");
 
- spawnInterval = setInterval(spawnWaterCan, 900);
- timerInterval = setInterval(() => {
-   timeLeft -= 1;
-   updateTimer();
-   if (timeLeft <= 0) {
-     endGame();
-   }
- }, 1000);
+  startButton.disabled = true;
+  startButton.textContent = "Game in Progress";
+
+  removeWaterCan();
+  updateProgress();
+
+  // Show the first water can immediately.
+  spawnWaterCan();
+
+  // Create another water can on a repeating schedule.
+  spawnInterval = setInterval(spawnWaterCan, SPAWN_SPEED);
+
+  // Start the countdown timer.
+  timerInterval = setInterval(updateTimer, 1000);
 }
 
+// ------------------------------
+// Create a water can
+// ------------------------------
 
-function endGame() {
- if (!gameActive) return;
+function spawnWaterCan() {
+  if (!gameActive) {
+    return;
+  }
 
+  // Remove the previous can so only one is active.
+  removeWaterCan();
 
- gameActive = false;
- clearInterval(spawnInterval);
- clearInterval(timerInterval);
- grid.querySelectorAll('.grid-cell').forEach((cell) => {
-   cell.innerHTML = '';
- });
+  const gridSpaces = document.querySelectorAll(".grid-space");
 
+  const randomIndex = Math.floor(
+    Math.random() * gridSpaces.length
+  );
 
- const message = currentCans >= TARGET_SCORE
-   ? randomMessage(winMessages)
-   : randomMessage(loseMessages);
+  const selectedSpace = gridSpaces[randomIndex];
 
+  const waterCan = document.createElement("button");
 
- statusMessage.textContent = `${message} Final score: ${currentCans}.`;
- startButton.textContent = 'Play Again';
- startButton.disabled = false;
+  waterCan.type = "button";
+  waterCan.classList.add("water-can");
+  waterCan.textContent = "💧";
+  waterCan.setAttribute("aria-label", "Collect this water can");
+
+  waterCan.addEventListener("click", collectWaterCan);
+
+  selectedSpace.appendChild(waterCan);
+
+  // Remove the can if it is not clicked quickly enough.
+  removeCanTimeout = setTimeout(() => {
+    if (waterCan.isConnected) {
+      waterCan.remove();
+    }
+  }, CAN_LIFETIME);
 }
 
+// ------------------------------
+// Collect a water can
+// ------------------------------
 
-grid.addEventListener('click', (event) => {
- if (!gameActive) return;
- const target = event.target;
- if (target.closest('.water-can')) {
-   currentCans += 1;
-   updateScore();
-   target.closest('.grid-cell').innerHTML = '';
-   spawnWaterCan();
- }
-});
+function collectWaterCan(event) {
+  if (!gameActive) {
+    return;
+  }
 
+  const clickedCan = event.currentTarget;
 
-startButton.addEventListener('click', startGame);
+  // Disable the button immediately to prevent double-click points.
+  clickedCan.disabled = true;
+  clickedCan.remove();
 
+  clearTimeout(removeCanTimeout);
 
-createGrid();
-updateScore();
-updateTimer();
+  currentCans++;
+  scoreDisplay.textContent = currentCans;
+
+  updateProgress();
+
+  if (currentCans >= TARGET_SCORE) {
+    endGame(true);
+    return;
+  }
+
+  statusMessage.textContent =
+    `${TARGET_SCORE - currentCans} more water cans to go!`;
+}
+
+// ------------------------------
+// Update the countdown
+// ------------------------------
+
+function updateTimer() {
+  if (!gameActive) {
+    return;
+  }
+
+  timeLeft--;
+  timerDisplay.textContent = timeLeft;
+
+  if (timeLeft <= 0) {
+    timeLeft = 0;
+    timerDisplay.textContent = timeLeft;
+
+    endGame(false);
+  }
+}
+
+// ------------------------------
+// Update progress bar
+// ------------------------------
+
+function updateProgress() {
+  const percentage = Math.min(
+    (currentCans / TARGET_SCORE) * 100,
+    100
+  );
+
+  progressBar.style.width = `${percentage}%`;
+  progressPercent.textContent = `${Math.round(percentage)}%`;
+
+  progressTrack.setAttribute(
+    "aria-valuenow",
+    currentCans
+  );
+}
+
+// ------------------------------
+// End the game
+// ------------------------------
+
+function endGame(playerWon) {
+  gameActive = false;
+
+  clearGameTimers();
+  removeWaterCan();
+
+  startButton.disabled = false;
+  startButton.textContent = "Play Again";
+
+  if (playerWon) {
+    const message = getRandomMessage(winMessages);
+
+    statusMessage.textContent =
+      `${message} You collected ${currentCans} water cans!`;
+
+    statusMessage.classList.add("win");
+    statusMessage.classList.remove("lose");
+  } else {
+    const message = getRandomMessage(loseMessages);
+
+    statusMessage.textContent =
+      `${message} You collected ${currentCans} out of ${TARGET_SCORE}.`;
+
+    statusMessage.classList.add("lose");
+    statusMessage.classList.remove("win");
+  }
+}
+
+// ------------------------------
+// Remove active water can
+// ------------------------------
+
+function removeWaterCan() {
+  const activeCan = document.querySelector(".water-can");
+
+  if (activeCan) {
+    activeCan.remove();
+  }
+
+  clearTimeout(removeCanTimeout);
+  removeCanTimeout = null;
+}
+
+// ------------------------------
+// Stop all timers
+// ------------------------------
+
+function clearGameTimers() {
+  clearInterval(spawnInterval);
+  clearInterval(timerInterval);
+  clearTimeout(removeCanTimeout);
+
+  spawnInterval = null;
+  timerInterval = null;
+  removeCanTimeout = null;
+}
+
+// ------------------------------
+// Choose a random message
+// ------------------------------
+
+function getRandomMessage(messages) {
+  const randomIndex = Math.floor(
+    Math.random() * messages.length
+  );
+
+  return messages[randomIndex];
+}
+
+// ------------------------------
+// Start-button event
+// ------------------------------
+
+startButton.addEventListener("click", startGame);
+
+// ------------------------------
+// Initial page setup
+// ------------------------------
+
+targetDisplay.textContent = TARGET_SCORE;
+timerDisplay.textContent = STARTING_TIME;
+
+createGameGrid();
+updateProgress();
