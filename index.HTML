@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>charity: water Click Game</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <img src="img/cw_logo_horizontal.png" alt="charity: water logo" class="logo" />
+      <div>
+        <h1>Water Quest</h1>
+        <p class="game-instructions">Tap the jerry can each time it appears. Collect 20 or more cans to win!</p>
+      </div>
+    </header>
+
+    <div class="stats">
+      <div class="stat-card">
+        <span class="label">Score</span>
+        <strong id="current-cans">0</strong>
+      </div>
+      <div class="stat-card timer-card">
+        <span class="label">Time Left</span>
+        <strong id="timer">30</strong><span class="seconds">s</span>
+      </div>
+    </div>
+
+    <div id="status-message" class="status-message">Ready to make a difference?</div>
+
+    <div class="game-grid"></div>
+    <button id="start-game">Start Game</button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
